@@ -112,7 +112,9 @@ class SimpleRconClient {
 
     const authId = 1;
     this.sendPacket(authId, 3, this.password);
-    const authResponse = await this.waitForPacket((packet) => packet.id === authId || packet.id === -1);
+    const authResponse = await this.waitForPacket(
+      (packet) => packet.id === authId || packet.id === -1 || packet.type === 2
+    );
 
     if (authResponse.id === -1) {
       throw new Error('RCON authentication failed');
@@ -122,7 +124,10 @@ class SimpleRconClient {
   async run(command: string): Promise<string> {
     const cmdId = 2;
     this.sendPacket(cmdId, 2, command);
-    const response = await this.waitForPacket((packet) => packet.id === cmdId);
+    const response = await this.waitForPacket(
+      // Bedrock variants may not always echo request IDs consistently.
+      (packet) => packet.id === cmdId || packet.type === 0
+    );
     return response.payload;
   }
 
