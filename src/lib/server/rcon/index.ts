@@ -19,7 +19,12 @@ interface EffectiveRconConfig {
 class SimpleRconClient {
   private socket: net.Socket | null = null;
   private buffer = Buffer.alloc(0);
-  private pending = new Map<number, { resolve: (pkt: RconPacket) => void; reject: (err: Error) => void; timeout: NodeJS.Timeout }>();
+  private pending = new Set<{
+    match: (packet: RconPacket) => boolean;
+    resolve: (pkt: RconPacket) => void;
+    reject: (err: Error) => void;
+    timeout: NodeJS.Timeout;
+  }>();
 
   constructor(private host: string, private port: number, private password: string) {}
 
@@ -59,23 +64,28 @@ class SimpleRconClient {
         payload: packetBuffer.subarray(8, packetBuffer.length - 2).toString('utf8')
       };
 
-      const pending = this.pending.get(packet.id);
-      if (pending) {
-        clearTimeout(pending.timeout);
-        this.pending.delete(packet.id);
-        pending.resolve(packet);
+      for (const waiter of this.pending) {
+        if (!waiter.match(packet)) {
+          continue;
+        }
+
+        clearTimeout(waiter.timeout);
+        this.pending.delete(waiter);
+        waiter.resolve(packet);
+        break;
       }
     }
   }
 
-  private waitForPacket(id: number, timeoutMs = 5000): Promise<RconPacket> {
+  private waitForPacket(match: (packet: RconPacket) => boolean, timeoutMs = 5000): Promise<RconPacket> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        this.pending.delete(id);
+        this.pending.delete(waiter);
         reject(new Error('Timed out waiting for RCON response'));
       }, timeoutMs);
 
-      this.pending.set(id, { resolve, reject, timeout });
+      const waiter = { match, resolve, reject, timeout };
+      this.pending.add(waiter);
     });
   }
 
@@ -102,7 +112,7 @@ class SimpleRconClient {
 
     const authId = 1;
     this.sendPacket(authId, 3, this.password);
-    const authResponse = await this.waitForPacket(authId);
+    const authResponse = await this.waitForPacket((packet) => packet.id === authId || packet.id === -1);
 
     if (authResponse.id === -1) {
       throw new Error('RCON authentication failed');
@@ -112,7 +122,7 @@ class SimpleRconClient {
   async run(command: string): Promise<string> {
     const cmdId = 2;
     this.sendPacket(cmdId, 2, command);
-    const response = await this.waitForPacket(cmdId);
+    const response = await this.waitForPacket((packet) => packet.id === cmdId);
     return response.payload;
   }
 
