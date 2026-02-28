@@ -3,16 +3,14 @@ import { fail } from '@sveltejs/kit';
 import { assertCsrf } from '$lib/server/auth';
 import { getProvider } from '$lib/server/providers';
 import { getDiskUsage } from '$lib/server/files/disk';
-import { checkRconStatus, resolveRconConfig, runRconCommand } from '$lib/server/rcon';
 import { getActiveWorldName } from '$lib/server/worlds';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const provider = getProvider();
-  const [disk, activeWorld, rconStatus, rconCfg] = await Promise.all([
+  const [disk, activeWorld, commandStatus] = await Promise.all([
     getDiskUsage(locals.config.dataRoot),
     getActiveWorldName(),
-    checkRconStatus(),
-    resolveRconConfig()
+    provider.commandStatus()
   ]);
 
   let logs = '';
@@ -27,8 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     activeWorld,
     disk,
     logs,
-    rconStatus,
-    rconEnabled: rconCfg.enabled
+    commandStatus
   };
 };
 
@@ -58,10 +55,10 @@ export const actions: Actions = {
     }
 
     try {
-      const output = await runRconCommand(command);
-      return { ok: true, message: output || 'Command sent.' };
+      const result = await getProvider().runCommand(command);
+      return { ok: true, message: result.output || result.message };
     } catch (error: any) {
-      return fail(500, { error: error?.message ?? 'RCON command failed.' });
+      return fail(500, { error: error?.message ?? 'Command failed.' });
     }
   }
 };

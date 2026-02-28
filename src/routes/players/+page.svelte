@@ -8,8 +8,8 @@
 
 <h1>Player Management</h1>
 
-{#if !data.rconEnabled}
-  <div class="banner warn">RCON is disabled. Online list and notifications are skipped.</div>
+{#if !data.commandStatus.ok}
+  <div class="banner warn">Command channel unavailable: {data.commandStatus.message}</div>
 {/if}
 
 {#if form?.error}
@@ -105,6 +105,6 @@
 </div>
 
 <section class="card" style="margin-top:1rem;">
-  <h2 style="margin-top:0;">Online Players (RCON list)</h2>
+  <h2 style="margin-top:0;">Online Players (list command)</h2>
   <pre style="margin:0;background:#0c1118;color:#dbe6f3;padding:0.8rem;border-radius:8px;">{data.onlinePlayers}</pre>
 </section>

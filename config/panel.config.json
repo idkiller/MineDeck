@@ -5,7 +5,8 @@
     "containerName": "mc-bedrock"
   },
   "systemd": {
-    "serviceName": "bedrock-server"
+    "serviceName": "bedrock-server",
+    "commandExec": "/usr/local/bin/bedrock-send-command"
   },
   "rcon": {
     "host": "127.0.0.1"

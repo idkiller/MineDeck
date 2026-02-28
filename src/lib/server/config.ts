@@ -11,6 +11,7 @@ export interface AppConfig {
   };
   systemd: {
     serviceName: string;
+    commandExec?: string;
   };
   rcon: {
     host: string;
@@ -90,6 +91,10 @@ export function loadConfig(): AppConfig {
 
   if (process.env.MINEDECK_SYSTEMD_SERVICE) {
     config.systemd.serviceName = process.env.MINEDECK_SYSTEMD_SERVICE;
+  }
+
+  if (process.env.MINEDECK_SYSTEMD_COMMAND_EXEC) {
+    config.systemd.commandExec = process.env.MINEDECK_SYSTEMD_COMMAND_EXEC;
   }
 
   if (process.env.MINEDECK_RCON_HOST) {

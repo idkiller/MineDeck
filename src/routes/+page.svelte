@@ -18,8 +18,8 @@
   <div class="banner ok">{form.message}</div>
 {/if}
 
-{#if !data.rconEnabled}
-  <div class="banner warn">RCON is disabled. Enable it in Server settings to run commands.</div>
+{#if !data.commandStatus.ok}
+  <div class="banner warn">Command channel unavailable: {data.commandStatus.message}</div>
 {/if}
 
 <div class="grid two">
@@ -27,7 +27,7 @@
     <h2 style="margin-top:0;">Server</h2>
     <p><strong>Provider:</strong> {data.providerType}</p>
     <p><strong>Active world:</strong> {data.activeWorld}</p>
-    <p><strong>RCON status:</strong> {data.rconStatus.ok ? 'Connected' : 'Failed'} ({data.rconStatus.message})</p>
+    <p><strong>Command status:</strong> {data.commandStatus.ok ? 'Ready' : 'Failed'} ({data.commandStatus.message})</p>
 
     <form method="POST" action="?/restart">
       <input type="hidden" name="_csrf" value={data.csrfToken} />
@@ -45,7 +45,7 @@
 </div>
 
 <section class="card" style="margin-top:1rem;">
-  <h2 style="margin-top:0;">Send Command (RCON)</h2>
+  <h2 style="margin-top:0;">Send Command</h2>
   <form method="POST" action="?/command" style="display:flex;gap:0.5rem;align-items:flex-end;">
     <input type="hidden" name="_csrf" value={data.csrfToken} />
     <label style="flex:1;">

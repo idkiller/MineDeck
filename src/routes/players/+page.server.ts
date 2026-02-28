@@ -9,37 +9,66 @@ import {
   removePermission,
   setPlayerPermission
 } from '$lib/server/players';
-import { resolveRconConfig, runRconCommand } from '$lib/server/rcon';
+import { getProvider } from '$lib/server/providers';
 
 async function tryAllowlistAnnouncement(): Promise<string | null> {
+  const provider = getProvider();
   try {
-    const cfg = await resolveRconConfig();
-    if (!cfg.enabled) {
-      return 'RCON disabled, skipped notification.';
+    const status = await provider.commandStatus();
+    if (!status.ok) {
+      return `Command channel unavailable, skipped notification (${status.message}).`;
     }
-    await runRconCommand('say Allowlist updated by MineDeck');
+    await provider.runCommand('say Allowlist updated by MineDeck');
     return null;
   } catch {
-    return 'Allowlist updated, but RCON notification failed.';
+    return 'Allowlist updated, but command notification failed.';
   }
 }
 
-export const load: PageServerLoad = async () => {
-  const [allowlist, permissions, rconCfg] = await Promise.all([readAllowlist(), readPermissions(), resolveRconConfig()]);
+function extractPlayerLine(logs: string): string | null {
+  const lines = logs.split(/\r?\n/);
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i];
+    if (/players online|online players|There are .* players/i.test(line)) {
+      return line;
+    }
+  }
+  return null;
+}
 
-  let onlinePlayers = 'RCON disabled';
-  if (rconCfg.enabled) {
+export const load: PageServerLoad = async () => {
+  const provider = getProvider();
+  const [allowlist, permissions, commandStatus] = await Promise.all([
+    readAllowlist(),
+    readPermissions(),
+    provider.commandStatus()
+  ]);
+
+  let onlinePlayers = `Command channel unavailable: ${commandStatus.message}`;
+  if (commandStatus.ok) {
     try {
-      onlinePlayers = await runRconCommand('list');
+      const result = await provider.runCommand('list');
+      if (result.output) {
+        onlinePlayers = result.output;
+      } else if (provider.type === 'docker') {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        const logs = await provider.logsTail(150);
+        const line = extractPlayerLine(logs);
+        onlinePlayers =
+          line ??
+          'list command sent via send-command. Bedrock usually writes output to logs; open /logs for details.';
+      } else {
+        onlinePlayers = `${result.message} Check service logs for list output.`;
+      }
     } catch (error: any) {
-      onlinePlayers = `RCON list failed: ${error?.message ?? 'unknown error'}`;
+      onlinePlayers = `Player list command failed: ${error?.message ?? 'unknown error'}`;
     }
   }
 
   return {
     allowlist,
     permissions,
-    rconEnabled: rconCfg.enabled,
+    commandStatus,
     onlinePlayers
   };
 };

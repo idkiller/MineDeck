@@ -14,7 +14,7 @@ export function getProvider(): ServerProvider {
   provider =
     config.provider === 'docker'
       ? new DockerProvider(config.docker.containerName)
-      : new SystemdProvider(config.systemd.serviceName);
+      : new SystemdProvider(config.systemd.serviceName, config.systemd.commandExec);
 
   return provider;
 }

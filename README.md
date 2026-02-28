@@ -2,7 +2,7 @@
 
 MineDeck is a production-ready MVP admin panel for **one Minecraft Bedrock Dedicated Server** instance.
 
-It is a **single SvelteKit app** (SSR + server actions + route handlers), with SQLite persistence, session auth, file-based Bedrock management, provider-based restarts, and optional RCON command support.
+It is a **single SvelteKit app** (SSR + server actions + route handlers), with SQLite persistence, session auth, file-based Bedrock management, provider-based restarts, and provider-based command dispatch.
 
 ## Features Implemented
 
@@ -16,11 +16,11 @@ It is a **single SvelteKit app** (SSR + server actions + route handlers), with S
   - auth guard in `hooks.server.ts`
 - Dashboard (`/`)
   - provider type, restart button
-  - RCON connectivity status
+  - provider command channel status
   - active world (`server.properties` `level-name`)
   - disk usage for `/opt/mc-data`
   - recent log tail (200 lines)
-  - command runner via RCON
+  - command runner via provider
 - Server settings (`/server`)
   - structured editor for common `server.properties` keys
   - raw editor
@@ -45,7 +45,7 @@ It is a **single SvelteKit app** (SSR + server actions + route handlers), with S
   - manage `allowlist.json`
   - manage `permissions.json`
   - atomic JSON writes
-  - optional RCON say/list integration
+  - optional provider-based `say`/`list` command integration
 - Monitoring (`/logs`)
   - tail logs with configurable line count + auto refresh
 - Automation (`/automation`)
@@ -73,7 +73,6 @@ It is a **single SvelteKit app** (SSR + server actions + route handlers), with S
       config.ts
       state.ts
       /providers
-      /rcon
       /files
       /packs
       /worlds
@@ -109,9 +108,8 @@ Supported values:
 - `provider` (`docker` or `systemd`)
 - `docker.containerName` (default `mc-bedrock`)
 - `systemd.serviceName` (default `bedrock-server`)
-- `rcon.host` (default `127.0.0.1`)
-- `rcon.port` (optional; falls back to `server.properties`)
-- `rcon.password` (optional; falls back to `server.properties`)
+- `systemd.commandExec` (optional helper path, default sample: `/usr/local/bin/bedrock-send-command`)
+- `rcon.host` / `rcon.port` / `rcon.password` (legacy; current command channel does not require these)
 
 Environment overrides:
 
@@ -120,6 +118,7 @@ Environment overrides:
 - `MINEDECK_PROVIDER`
 - `MINEDECK_DOCKER_CONTAINER`
 - `MINEDECK_SYSTEMD_SERVICE`
+- `MINEDECK_SYSTEMD_COMMAND_EXEC`
 - `MINEDECK_RCON_HOST`
 - `MINEDECK_RCON_PORT`
 - `MINEDECK_RCON_PASSWORD`
@@ -187,17 +186,15 @@ MineDeck must be able to:
 - read/write under `/opt/mc-data`
 - restart the Bedrock server via selected provider:
   - Docker: access to Docker socket/CLI
-  - Systemd: permission to execute `systemctl` and `journalctl`
+  - Systemd: permission to execute `systemctl` and `journalctl`, plus either:
+    - writable service stdin (`/proc/<MainPID>/fd/0`), or
+    - a helper executable (`systemd.commandExec`) that accepts one command argument and forwards it to the server console
 
-## Enabling RCON (Bedrock)
+## Provider Command Notes
 
-You can use MineDeck `/server` -> **Enable RCON (One Click)**, or set manually in `server.properties`:
-
-- `enable-rcon=true`
-- `rcon.port=<port>`
-- `rcon.password=<strong-secret>`
-
-Then restart the server.
+- Docker provider uses `docker exec <container> send-command "<cmd>"` (itzg image helper).
+- Some Bedrock setups write command output to logs instead of stdout. MineDeck will show best-effort output and may direct you to `/logs`.
+- Systemd provider defaults to stdin injection on `MainPID`. For more reliable behavior, configure `systemd.commandExec` (or `MINEDECK_SYSTEMD_COMMAND_EXEC`) with your own command forwarder script.
 
 ## Cloudflare Tunnel Note
 
