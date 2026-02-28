@@ -1,0 +1,143 @@
+:root {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --text: #1d2228;
+  --muted: #5c6470;
+  --brand: #1f6feb;
+  --danger: #a10f2b;
+  --warning: #915a00;
+  --ok: #0b7a3e;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 10% 0%, #ffffff 0%, #eef2f8 45%, #e7ecf2 100%);
+  color: var(--text);
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid #dce1e9;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid.two {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #c7ced8;
+  border-radius: 6px;
+  background: #fff;
+}
+
+textarea {
+  min-height: 200px;
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+button {
+  border: 1px solid #2d5fb7;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #ffffff;
+  border-color: #c7ced8;
+  color: #1d2228;
+}
+
+button.warn {
+  background: #f7e8c4;
+  border-color: #d8b15c;
+  color: #5d3f03;
+}
+
+button.danger {
+  background: #d83a5a;
+  border-color: #c72244;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid #e4e8ef;
+  padding: 0.45rem 0.25rem;
+  vertical-align: top;
+}
+
+code,
+pre {
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.banner {
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.banner.warn {
+  background: #fff4d8;
+  color: var(--warning);
+  border: 1px solid #f0d793;
+}
+
+.banner.error {
+  background: #ffe3e8;
+  color: var(--danger);
+  border: 1px solid #f3a3b2;
+}
+
+.banner.ok {
+  background: #dff6e7;
+  color: var(--ok);
+  border: 1px solid #8ed9a7;
+}

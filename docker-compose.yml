@@ -1,0 +1,18 @@
+services:
+  minedeck:
+    build: .
+    container_name: minedeck
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: change-me-now
+      MINEDECK_DATA_ROOT: /opt/mc-data
+      MINEDECK_PROVIDER: docker
+      MINEDECK_DOCKER_CONTAINER: mc-bedrock
+    volumes:
+      - /opt/mc-data:/opt/mc-data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/panel.config.json:/app/config/panel.config.json:ro

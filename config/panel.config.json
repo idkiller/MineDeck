@@ -1,0 +1,13 @@
+{
+  "dataRoot": "/opt/mc-data",
+  "provider": "docker",
+  "docker": {
+    "containerName": "mc-bedrock"
+  },
+  "systemd": {
+    "serviceName": "bedrock-server"
+  },
+  "rcon": {
+    "host": "127.0.0.1"
+  }
+}
